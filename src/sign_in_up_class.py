@@ -2,8 +2,11 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from qtwidgets import PasswordEdit
+import bcrypt
+import pyodbc
 import src.utils as utils
 import src.config as config
+import src.private_config as private_config
 
 class sign_in_up(QMainWindow):
     def __init__(self):
@@ -80,6 +83,7 @@ class sign_in_tab(QWidget):
         self.login_btn.setFixedSize(self.width - 100, (self.height * 0.10))
         self.login_btn.setStyleSheet('QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: ' + config.BLUE_COLOR + '; color: ' + config.BASIC_STR_COLOR +  '}'
                                     'QPushButton:hover {background-color: ' + config.DARK_BLUE_COLOR + '}')
+        self.login_btn.released.connect(self.login_btn_released)
 
 
 
@@ -92,6 +96,34 @@ class sign_in_tab(QWidget):
         self.main_layout.addStretch(1)
 
         self.setLayout(self.hbox_layout)
+
+    def login_btn_released(self):
+        username_str = self.username_mail_field.text()
+        password_str = self.password_field.text()
+
+        if (username_str != "" and password_str != ""):
+            try:
+                username_or_mail = ("username" if not "@" in username_str else "mail")
+                connection = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:niko.database.windows.net,1433;Database={" + private_config.DATABASE_DATABASE + "};Uid=" + private_config.DATABASE_UID + ";Pwd=" + private_config.DATABASE_PASSWORD + ";Encrypt=yes;TrustServerCertificate=no;")
+                crsr = connection.cursor()
+                user_data = crsr.execute("""
+                    SET NOCOUNT ON;
+                    SELECT * FROM users WHERE """ + username_or_mail + """ = ?""", username_str)
+                
+                for row in user_data:
+                    try:
+                        if bcrypt.checkpw(password_str.encode("utf-8"), row[3]):
+                            print("TODO: PROCEED TO LOGIN")
+                            return
+                    except KeyError as e:
+                        utils.show_error("KeyError - Should never happen...")
+                utils.show_error("The entered credentials are incorrect.")
+                return
+
+            except Exception as e:
+                utils.show_error("An Unusual error occurred...\n" + str(e))
+        else:
+            utils.show_error("Please fill in the information.")
     
 
 class sign_up_tab(QWidget):
@@ -143,6 +175,8 @@ class sign_up_tab(QWidget):
                                             'border: 2px solid ' + config.GRAY_COLOR + '; border-radius: 5px; font-size: 14pt}'
                                             'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
                                             'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
+        self.password_field.textEdited.connect(self.pass_line_edit_changed)
+    
 
         self.confirmation_password_label = QLabel("Confirm Password:")
         self.confirmation_password_label.setFont(config.BASIC_STR_FONT)
@@ -155,11 +189,13 @@ class sign_up_tab(QWidget):
                                             'border: 2px solid ' + config.GRAY_COLOR + '; border-radius: 5px; font-size: 14pt}'
                                             'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
                                             'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
+        self.confirmation_password_field.textEdited.connect(self.confirmation_pass_line_edit_changed)
 
         self.sign_up_btn = QPushButton("Sign Up")
         self.sign_up_btn.setFixedSize(self.width - 100, (self.height * 0.10))
         self.sign_up_btn.setStyleSheet('QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: ' + config.BLUE_COLOR + '; color: ' + config.BASIC_STR_COLOR +  '}'
                                     'QPushButton:hover {background-color: ' + config.DARK_BLUE_COLOR + '}')
+        self.sign_up_btn.released.connect(self.sign_up_pushed)
 
 
 
@@ -176,3 +212,101 @@ class sign_up_tab(QWidget):
         self.main_layout.addStretch(1)
 
         self.setLayout(self.hbox_layout)
+
+    def pass_line_edit_changed(self, msg):
+        if (len(msg) > config.MAX_PASSWORD_SIZE):
+            self.password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                            'border: 2px solid red; border-radius: 5px; font-size: 14pt}'
+                                            'QLineEdit:hover { border: 1px solid red;}'
+                                            'QLineEdit:focus { border: 2px solid red;}')
+        else:
+            self.password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                            'border: 2px solid ' + config.GRAY_COLOR + '; border-radius: 5px; font-size: 14pt}'
+                                            'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
+                                            'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
+
+    def confirmation_pass_line_edit_changed(self, msg):
+        pass_txt = self.password_field.text()
+        if (pass_txt != ""):
+            if (msg != pass_txt):
+                self.confirmation_password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                                'border: 2px solid red; border-radius: 5px; font-size: 14pt}'
+                                                'QLineEdit:hover { border: 1px solid red;}'
+                                                'QLineEdit:focus { border: 2px solid red;}')
+            else:
+                self.confirmation_password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                                'border: 2px solid green; border-radius: 5px; font-size: 14pt}'
+                                                'QLineEdit:hover { border: 1px solid green;}'
+                                                'QLineEdit:focus { border: 2px solid green;}')
+        else:
+            self.confirmation_password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                            'border: 2px solid ' + config.GRAY_COLOR + '; border-radius: 5px; font-size: 14pt}'
+                                            'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
+                                            'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
+
+    def sign_up_pushed(self):
+        username_str = self.username_field.text()
+        mail_str = self.mail_field.text()
+        password_str = self.password_field.text()
+        password_confirmation_str = self.confirmation_password_field.text()
+        if (username_str != "" and mail_str != "" and password_str != "" and password_confirmation_str != ""):
+            print(mail_str)
+            if ("@" in mail_str):
+                if (len(username_str) >= config.MIN_USERNAME_SIZE):
+                    if (len(password_str) >= config.MIN_PASSWORD_SIZE):
+                        if (password_str == password_confirmation_str):
+                            try:
+                                nbr_usernames = 0
+                                nbr_mails = 0
+                                connection = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:niko.database.windows.net,1433;Database={" + private_config.DATABASE_DATABASE + "};Uid=" + private_config.DATABASE_UID + ";Pwd=" + private_config.DATABASE_PASSWORD + ";Encrypt=yes;TrustServerCertificate=no;")
+                                crsr = connection.cursor()
+                                username_data = crsr.execute("""
+                                    SET NOCOUNT ON;
+                                    SELECT * FROM users WHERE username = ?""",
+                                    username_str)
+
+                                for _ in username_data:
+                                    nbr_usernames += 1
+                                    break
+
+                                mail_data = crsr.execute("""
+                                    SET NOCOUNT ON;
+                                    SELECT * FROM users WHERE mail = ?""",
+                                    mail_str)
+
+                                for _ in mail_data:
+                                    nbr_mails += 1
+                                    break
+                            
+                                
+                                if (nbr_usernames != 0):
+                                    utils.show_error("That username is already taken.")
+                                    return
+                                if (nbr_mails != 0):
+                                    utils.show_error("That email is already registered.")
+                                    return
+                                hashed_pass = bcrypt.hashpw(password_str.encode("utf-8"), bcrypt.gensalt())
+                                print("Hashed password: " + str(hashed_pass))
+                                
+                                crsr.execute("""
+                                    SET NOCOUNT ON;
+                                    INSERT INTO users (username, mail, master_password)
+                                    VALUES (?,?,?)""", username_str, mail_str, hashed_pass)
+                                connection.commit()
+
+                                print("TODO: PROCEED TO LOGIN")
+
+                            except Exception as e:
+                                utils.show_error("An Unusual error occurred...\n" + str(e))
+                        else:
+                            utils.show_error("Your confirmation password is different from your password.")
+                    else:
+                        utils.show_error("Your password's length has to be longer or equal to " + str(config.MIN_PASSWORD_SIZE) + " characters.")
+                else:
+                    utils.show_error("Your username's length has to be longer or equal to " + str(config.MIN_PASSWORD_LENGTH) + " characters.")
+            else:
+                utils.show_error("You need to enter a valid email.")
+        else:
+            utils.show_error("Please fill in all the information")
+
+

@@ -20,3 +20,6 @@ def move_window_to_middle_of_screen(win_width, win_height, win):
     x = (screenGeometry.width() - win_width) / 2
     y = (screenGeometry.height() - win_height) / 2
     win.move(x, y)
+
+def show_error(msg):
+    print("ERROR | " + msg)
