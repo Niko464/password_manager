@@ -28,8 +28,9 @@ ERROR_WINDOW_TITLE = "Error"
 
 # PASSWORD GENERATION
 
-MIN_PASSWORD_LENGTH = 12
-MAX_PASSWORD_LENGTH = 20
+MIN_PASSWORD_GENERATION_LENGTH = 12
+MAX_PASSWORD_GENERATION_LENGTH = 20
+MAX_PASSWORD_LENGTH = 255
 ALPHABET = "AzByCxDwEvFuGtHsIrJqKpLoMnNmOlPkQjRiShTgUfVeWdXcYbZa"
 NUMBERS = "0123456789"
 SPECIAL_CHARS = ".=?/:\\_!"
@@ -39,7 +40,7 @@ SPECIAL_CHARS = ".=?/:\\_!"
 MESSAGE_FILL_IN_INFO = "Please fill in all the information"
 MESSAGE_INVALID_MAIL = "You need to enter a valid email."
 MESSAGE_USERNAME_INVALID_LENGTH = "Your username's length has to be longer or equal to " + str(MIN_USERNAME_SIZE) + " characters."
-MESSAGE_PASSWORD_INVALID_LENGTH = "Your password's length has to be longer or equal to " + str(MIN_PASSWORD_LENGTH) + " characters."
+MESSAGE_PASSWORD_INVALID_LENGTH = "Your password's length has to be shorter than " + str(MAX_PASSWORD_LENGTH) + " characters."
 MESSAGE_MASTER_PASSWORD_INVALID_LENGTH = "Your master password's length has to be longer or equal to " + str(MIN_MASTER_PASSWORD_SIZE) + " characters."
 MESSAGE_CONFIRMATION_PASS_DIFFERENT_PASS = "Your confirmation password is different from your password."
 MESSAGE_MAIL_TAKEN = "That email is already registered."

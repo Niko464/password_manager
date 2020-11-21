@@ -121,6 +121,8 @@ class sign_in_tab(QWidget):
                         if bcrypt.checkpw(password_str.encode("utf-8"), bytes(row[3])):
                             self.parent.user_info["user_id"] = row[0]
                             self.parent.user_info["master_password"] = password_str
+                            crsr.close()
+                            connection.close()
                             self.parent.accept()
                             return
                     except KeyError as e:
@@ -293,9 +295,13 @@ class sign_up_tab(QWidget):
                                 
                                 if (nbr_usernames != 0):
                                     utils.show_error(config.MESSAGE_USERNAME_TAKEN)
+                                    crsr.close()
+                                    connection.close()
                                     return
                                 if (nbr_mails != 0):
                                     utils.show_error(config.MESSAGE_MAIL_TAKEN)
+                                    crsr.close()
+                                    connection.close()
                                     return
                                 hashed_pass = bcrypt.hashpw(password_str.encode("utf-8"), bcrypt.gensalt())
                                 
@@ -304,6 +310,8 @@ class sign_up_tab(QWidget):
                                 crsr.execute(sql_query, sql_args)
                                 connection.commit()
 
+                                crsr.close()
+                                connection.close()
                                 self.parent.accept()
 
                             except Exception as e:

@@ -41,6 +41,7 @@ class add_dialog(QDialog):
         self.password_label.setStyleSheet('QLabel {color: ' + config.BASIC_STR_COLOR + '}')
 
         self.password_field = PasswordEdit()
+        self.password_field.setMaxLength(config.MAX_PASSWORD_LENGTH)
         self.password_field.setPlaceholderText("ex: zfdslmkxLPMofgk=dg457")
         self.password_field.setFixedSize((self.width - 100), 35)
         self.password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
@@ -55,6 +56,7 @@ class add_dialog(QDialog):
         self.confirmation_password_label.setStyleSheet('QLabel {color: ' + config.BASIC_STR_COLOR + '}')
 
         self.confirmation_password_field = PasswordEdit()
+        self.confirmation_password_field.setMaxLength(config.MAX_PASSWORD_LENGTH)
         self.confirmation_password_field.setPlaceholderText("ex: zfdslmkxLPMofgk=dg457")
         self.confirmation_password_field.setFixedSize((self.width - 100), 35)
         self.confirmation_password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
@@ -120,18 +122,43 @@ class add_dialog(QDialog):
         self.setLayout(self.hbox_layout)
 
     def generate_password_clicked(self):
-        password = utils.create_random_password(random.randint(config.MIN_PASSWORD_LENGTH, config.MAX_PASSWORD_LENGTH))
+        password = utils.create_random_password(random.randint(config.MIN_PASSWORD_GENERATION_LENGTH, config.MAX_PASSWORD_GENERATION_LENGTH))
         self.password_field.setText(password)
         self.confirmation_password_field.setText(password)
 
     def copy_password_btn_clicked(self):
         clipboard.copy(self.password_field.text())
 
-    def pass_line_edit_changed(self):
-        pass
+    def pass_line_edit_changed(self, msg):
+        if (len(msg) > config.MAX_PASSWORD_LENGTH):
+            self.password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                            'border: 2px solid red; border-radius: 5px; font-size: 14pt}'
+                                            'QLineEdit:hover { border: 1px solid red;}'
+                                            'QLineEdit:focus { border: 2px solid red;}')
+        else:
+            self.password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                            'border: 2px solid ' + config.GRAY_COLOR + '; border-radius: 5px; font-size: 14pt}'
+                                            'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
+                                            'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
 
-    def confirmation_pass_line_edit_changed(self):
-        pass
+    def confirmation_pass_line_edit_changed(self, msg):
+        pass_txt = self.password_field.text()
+        if (pass_txt != ""):
+            if (msg != pass_txt):
+                self.confirmation_password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                                'border: 2px solid red; border-radius: 5px; font-size: 14pt}'
+                                                'QLineEdit:hover { border: 1px solid red;}'
+                                                'QLineEdit:focus { border: 2px solid red;}')
+            else:
+                self.confirmation_password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                                'border: 2px solid green; border-radius: 5px; font-size: 14pt}'
+                                                'QLineEdit:hover { border: 1px solid green;}'
+                                                'QLineEdit:focus { border: 2px solid green;}')
+        else:
+            self.confirmation_password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
+                                            'border: 2px solid ' + config.GRAY_COLOR + '; border-radius: 5px; font-size: 14pt}'
+                                            'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
+                                            'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
 
     def add_btn_clicked(self):
         name_str = self.name_field.text()
