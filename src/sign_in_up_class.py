@@ -3,19 +3,18 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from qtwidgets import PasswordEdit
 import bcrypt
-import pyodbc
 import mysql.connector as mysql
 import src.utils as utils
 import src.config as config
 import src.private_config as private_config
 
-class sign_in_up(QMainWindow):
+class sign_in_up(QDialog):
     def __init__(self):
         super().__init__()
-        self.central_widget = QWidget()
         self.main_layout = QGridLayout()
         self.width = 400
         self.height = 500
+        self.user_info = {"user_id": "", "master_password": ""}
         self.create_ui()
 
     def create_ui(self):
@@ -23,25 +22,28 @@ class sign_in_up(QMainWindow):
         utils.move_window_to_middle_of_screen(self.width, self.height, self)
         self.tabs_list = QTabWidget()
 
-        self.tabs_list.addTab(sign_in_tab(self.width, self.height), "Sign In")
-        self.tabs_list.addTab(sign_up_tab(self.width, self.height), "Sign Up")
+        self.tabs_list.addTab(sign_in_tab(self.width, self.height, self), "Sign In")
+        self.tabs_list.addTab(sign_up_tab(self.width, self.height, self), "Sign Up")
 
         self.tabs_list.setStyleSheet('QTabBar { font-size: 18pt; font-family: Cursive; color: ' + config.BASIC_STR_COLOR + '} '
-                                    'QTabBar::tab:selected {height: 50px; width: ' + str((self.width - 18) / 2) + 'px; background-color: ' + config.DARK_GRAY_COLOR + ';}'
-                                    'QTabBar::tab:!selected {height: 50px; width: ' + str((self.width - 18) / 2) + 'px; background-color: ' + config.DARK_GRAY_COLOR + ';}'
+                                    'QTabBar::tab:selected {height: 50px; width: ' + str((self.width - 25) / 2) + 'px; background-color: ' + config.DARK_GRAY_COLOR + ';}'
+                                    'QTabBar::tab:!selected {height: 50px; width: ' + str((self.width - 25) / 2) + 'px; background-color: ' + config.DARK_GRAY_COLOR + ';}'
                                     'QTabWidget>QWidget {background-color: ' + config.GRAY_COLOR + ';}'
                                     'QTabWidget::pane { border: 0; }')
 
-        self.central_widget.setStyleSheet('QWidget {background-color: ' + config.GRAY_COLOR + ';}')
+        self.setStyleSheet('QWidget {background-color: ' + config.GRAY_COLOR + ';}')
 
         self.main_layout.addWidget(self.tabs_list)
-        self.central_widget.setLayout(self.main_layout)
-        self.setCentralWidget(self.central_widget)
+        self.setLayout(self.main_layout)
+
+    def get_user_info(self):
+        return self.user_info
 
 
 class sign_in_tab(QWidget):
-    def __init__(self, width, height):
+    def __init__(self, width, height, parent):
         super().__init__()
+        self.parent = parent
         self.width = width
         self.height = height
         self.create_ui()
@@ -74,7 +76,6 @@ class sign_in_tab(QWidget):
         self.password_field = PasswordEdit()
         self.password_field.setPlaceholderText("ex: password")
         self.password_field.setFixedSize((self.width - 100), 35)
-        #self.password_field.setEchoMode(QLineEdit.Password)
         self.password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
                                             'border: 2px solid ' + config.GRAY_COLOR + '; border-radius: 5px; font-size: 14pt}'
                                             'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
@@ -118,22 +119,25 @@ class sign_in_tab(QWidget):
                 for row in crsr.fetchall():
                     try:
                         if bcrypt.checkpw(password_str.encode("utf-8"), bytes(row[3])):
-                            print("TODO: PROCEED TO LOGIN")
+                            self.parent.user_info["user_id"] = row[0]
+                            self.parent.user_info["master_password"] = password_str
+                            self.parent.accept()
                             return
                     except KeyError as e:
                         utils.show_error("KeyError - Should never happen...")
-                utils.show_error("The entered credentials are incorrect.")
+                utils.show_error(config.MESSAGE_INVALID_CREDENTIALS)
                 return
 
             except Exception as e:
                 utils.show_error("An Unusual error occurred...\n" + str(e))
         else:
-            utils.show_error("Please fill in the information.")
+            utils.show_error(config.MESSAGE_FILL_IN_INFO)
     
 
 class sign_up_tab(QWidget):
-    def __init__(self, width, height):
+    def __init__(self, width, height, parent):
         super().__init__()
+        self.parent = parent
         self.width = width
         self.height = height
         self.create_ui()
@@ -219,7 +223,7 @@ class sign_up_tab(QWidget):
         self.setLayout(self.hbox_layout)
 
     def pass_line_edit_changed(self, msg):
-        if (len(msg) > config.MAX_PASSWORD_SIZE):
+        if (len(msg) > config.MAX_MASTER_PASSWORD_SIZE):
             self.password_field.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
                                             'border: 2px solid red; border-radius: 5px; font-size: 14pt}'
                                             'QLineEdit:hover { border: 1px solid red;}'
@@ -258,7 +262,7 @@ class sign_up_tab(QWidget):
             print(mail_str)
             if ("@" in mail_str):
                 if (len(username_str) >= config.MIN_USERNAME_SIZE):
-                    if (len(password_str) >= config.MIN_PASSWORD_SIZE):
+                    if (len(password_str) >= config.MIN_MASTER_PASSWORD_SIZE):
                         if (password_str == password_confirmation_str):
                             try:
                                 nbr_usernames = 0
@@ -288,10 +292,10 @@ class sign_up_tab(QWidget):
                             
                                 
                                 if (nbr_usernames != 0):
-                                    utils.show_error("That username is already taken.")
+                                    utils.show_error(config.MESSAGE_USERNAME_TAKEN)
                                     return
                                 if (nbr_mails != 0):
-                                    utils.show_error("That email is already registered.")
+                                    utils.show_error(config.MESSAGE_MAIL_TAKEN)
                                     return
                                 hashed_pass = bcrypt.hashpw(password_str.encode("utf-8"), bcrypt.gensalt())
                                 
@@ -300,19 +304,19 @@ class sign_up_tab(QWidget):
                                 crsr.execute(sql_query, sql_args)
                                 connection.commit()
 
-                                print("TODO: PROCEED TO LOGIN")
+                                self.parent.accept()
 
                             except Exception as e:
                                 utils.show_error("An Unusual error occurred...\n" + str(e))
                         else:
-                            utils.show_error("Your confirmation password is different from your password.")
+                            utils.show_error(config.MESSAGE_CONFIRMATION_PASS_DIFFERENT_PASS)
                     else:
-                        utils.show_error("Your password's length has to be longer or equal to " + str(config.MIN_PASSWORD_SIZE) + " characters.")
+                        utils.show_error(config.MESSAGE_MASTER_PASSWORD_INVALID_LENGTH)
                 else:
-                    utils.show_error("Your username's length has to be longer or equal to " + str(config.MIN_PASSWORD_LENGTH) + " characters.")
+                    utils.show_error(config.MESSAGE_USERNAME_INVALID_LENGTH)
             else:
-                utils.show_error("You need to enter a valid email.")
+                utils.show_error(config.MESSAGE_INVALID_MAIL)
         else:
-            utils.show_error("Please fill in all the information")
+            utils.show_error(config.MESSAGE_FILL_IN_INFO)
 
 
