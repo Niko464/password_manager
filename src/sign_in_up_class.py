@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 from qtwidgets import PasswordEdit
 import bcrypt
 import pyodbc
+import mysql.connector as mysql
 import src.utils as utils
 import src.config as config
 import src.private_config as private_config
@@ -104,15 +105,19 @@ class sign_in_tab(QWidget):
         if (username_str != "" and password_str != ""):
             try:
                 username_or_mail = ("username" if not "@" in username_str else "mail")
-                connection = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:niko.database.windows.net,1433;Database={" + private_config.DATABASE_DATABASE + "};Uid=" + private_config.DATABASE_UID + ";Pwd=" + private_config.DATABASE_PASSWORD + ";Encrypt=yes;TrustServerCertificate=no;")
+                connection = mysql.connect(
+                            host = private_config.MYSQL_HOST,
+                            user = private_config.MYSQL_USER,
+                            passwd = private_config.MYSQL_PASS,
+                            database = private_config.MYSQL_DATABASE
+                        )
                 crsr = connection.cursor()
-                user_data = crsr.execute("""
-                    SET NOCOUNT ON;
-                    SELECT * FROM users WHERE """ + username_or_mail + """ = ?""", username_str)
-                
-                for row in user_data:
+                sql_query = """SELECT * FROM users WHERE """ + username_or_mail + """ = %s"""
+                sql_args = (username_str, )
+                crsr.execute(sql_query, sql_args)
+                for row in crsr.fetchall():
                     try:
-                        if bcrypt.checkpw(password_str.encode("utf-8"), row[3]):
+                        if bcrypt.checkpw(password_str.encode("utf-8"), bytes(row[3])):
                             print("TODO: PROCEED TO LOGIN")
                             return
                     except KeyError as e:
@@ -258,23 +263,26 @@ class sign_up_tab(QWidget):
                             try:
                                 nbr_usernames = 0
                                 nbr_mails = 0
-                                connection = pyodbc.connect("Driver={ODBC Driver 17 for SQL Server};Server=tcp:niko.database.windows.net,1433;Database={" + private_config.DATABASE_DATABASE + "};Uid=" + private_config.DATABASE_UID + ";Pwd=" + private_config.DATABASE_PASSWORD + ";Encrypt=yes;TrustServerCertificate=no;")
+                                connection = mysql.connect(
+                                    host = private_config.MYSQL_HOST,
+                                    user = private_config.MYSQL_USER,
+                                    passwd = private_config.MYSQL_PASS,
+                                    database = private_config.MYSQL_DATABASE
+                                )
                                 crsr = connection.cursor()
-                                username_data = crsr.execute("""
-                                    SET NOCOUNT ON;
-                                    SELECT * FROM users WHERE username = ?""",
-                                    username_str)
+                                sql_query = """SELECT * FROM users WHERE username = %s"""
+                                sql_args = (username_str, )
+                                crsr.execute(sql_query, sql_args)
 
-                                for _ in username_data:
+                                for _ in crsr.fetchall():
                                     nbr_usernames += 1
                                     break
+                                
+                                sql_query = """SELECT * FROM users WHERE mail = %s"""
+                                sql_args = (mail_str, )
+                                crsr.execute(sql_query, sql_args)
 
-                                mail_data = crsr.execute("""
-                                    SET NOCOUNT ON;
-                                    SELECT * FROM users WHERE mail = ?""",
-                                    mail_str)
-
-                                for _ in mail_data:
+                                for _ in crsr.fetchall():
                                     nbr_mails += 1
                                     break
                             
@@ -286,12 +294,10 @@ class sign_up_tab(QWidget):
                                     utils.show_error("That email is already registered.")
                                     return
                                 hashed_pass = bcrypt.hashpw(password_str.encode("utf-8"), bcrypt.gensalt())
-                                print("Hashed password: " + str(hashed_pass))
                                 
-                                crsr.execute("""
-                                    SET NOCOUNT ON;
-                                    INSERT INTO users (username, mail, master_password)
-                                    VALUES (?,?,?)""", username_str, mail_str, hashed_pass)
+                                sql_query = """INSERT INTO users (username, mail, master_password) VALUES (%s,%s, _binary %s)"""
+                                sql_args = (username_str, mail_str, hashed_pass)
+                                crsr.execute(sql_query, sql_args)
                                 connection.commit()
 
                                 print("TODO: PROCEED TO LOGIN")
