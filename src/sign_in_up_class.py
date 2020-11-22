@@ -85,7 +85,7 @@ class sign_in_tab(QWidget):
         self.login_btn.setFixedSize(self.width - 100, (self.height * 0.10))
         self.login_btn.setStyleSheet('QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: ' + config.BLUE_COLOR + '; color: ' + config.BASIC_STR_COLOR +  '}'
                                     'QPushButton:hover {background-color: ' + config.DARK_BLUE_COLOR + '}')
-        self.login_btn.released.connect(self.login_btn_released)
+        self.login_btn.clicked.connect(self.login_btn_clicked)
 
 
 
@@ -99,7 +99,7 @@ class sign_in_tab(QWidget):
 
         self.setLayout(self.hbox_layout)
 
-    def login_btn_released(self):
+    def login_btn_clicked(self):
         username_str = self.username_mail_field.text()
         password_str = self.password_field.text()
 
@@ -206,7 +206,7 @@ class sign_up_tab(QWidget):
         self.sign_up_btn.setFixedSize(self.width - 100, (self.height * 0.10))
         self.sign_up_btn.setStyleSheet('QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: ' + config.BLUE_COLOR + '; color: ' + config.BASIC_STR_COLOR +  '}'
                                     'QPushButton:hover {background-color: ' + config.DARK_BLUE_COLOR + '}')
-        self.sign_up_btn.released.connect(self.sign_up_pushed)
+        self.sign_up_btn.clicked.connect(self.sign_up_clicked)
 
 
 
@@ -255,7 +255,7 @@ class sign_up_tab(QWidget):
                                             'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
                                             'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
 
-    def sign_up_pushed(self):
+    def sign_up_clicked(self):
         username_str = self.username_field.text()
         mail_str = self.mail_field.text()
         password_str = self.password_field.text()

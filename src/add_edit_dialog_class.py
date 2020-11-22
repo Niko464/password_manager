@@ -5,19 +5,25 @@ from qtwidgets import PasswordEdit
 import src.utils as utils
 import src.config as config
 import src.sql_utils as sql_utils
+import src.enums as enums
 import random
 import clipboard
 
-class add_dialog(QDialog):
-    def __init__(self, main_wrapper):
+class add_edit_dialog(QDialog):
+    def __init__(self, main_wrapper, dialog_type, additional_info=None):
         super().__init__()
+        self.type = dialog_type
         self.width = main_wrapper.width
         self.height = main_wrapper.height
         self.main_wrapper = main_wrapper
+        self.additional_info = additional_info
         self.create_ui()
 
     def create_ui(self):
-        self.setWindowTitle("Add a new password")
+        if (self.type == enums.ADD_DIALOG_ENUM):
+            self.setWindowTitle("Add a new password")
+        elif (self.type == enums.EDIT_DIALOG_ENUM):
+            self.setWindowTitle("Edit password")
         self.main_layout = QVBoxLayout()
         self.hbox_layout = QHBoxLayout()
 
@@ -83,7 +89,14 @@ class add_dialog(QDialog):
         self.generate_copy_layout.addWidget(self.generate_password_btn)
         self.generate_copy_layout.addWidget(self.copy_password_btn)
 
-        self.add_btn = QPushButton("Add")
+        self.add_btn = QPushButton()
+        if (self.type == enums.ADD_DIALOG_ENUM):
+            self.add_btn.setText("Add")
+        elif (self.type == enums.EDIT_DIALOG_ENUM):
+            self.add_btn.setText("Confirm")
+            self.name_field.setText(self.additional_info["name"])
+            self.password_field.setText(self.additional_info["password"])
+            self.confirmation_password_field.setText(self.additional_info["password"])
         self.add_btn.setFixedSize((self.width - 100) / 2, self.height * 0.10)
         self.add_btn.setStyleSheet(config.BASIC_BLUE_BTN_STYLE_SHEET)
         self.add_btn.clicked.connect(self.add_btn_clicked)
@@ -162,10 +175,16 @@ class add_dialog(QDialog):
         if (name_str != "" and password_str != "" and confirmation_password_str != ""):
             if (password_str == confirmation_password_str):
                 if (len(password_str) <= config.MAX_PASSWORD_LENGTH):
-                    if (not sql_utils.check_if_name_exists(self.main_wrapper.user_info["user_id"], name_str)):
-                        self.accept()
-                    else:
-                        utils.show_error(config.MESSAGE_NAME_ALREADY_EXISTS)
+                    if (self.type == enums.ADD_DIALOG_ENUM):
+                        if (not sql_utils.check_if_name_exists(self.main_wrapper.user_info["user_id"], name_str)):
+                            self.accept()
+                        else:
+                            utils.show_error(config.MESSAGE_NAME_ALREADY_EXISTS)
+                    elif (self.type == enums.EDIT_DIALOG_ENUM):
+                        if ((self.additional_info["name"] != name_str) or (self.additional_info["password"] != password_str)):
+                            self.accept()
+                        else:
+                            utils.show_error(config.MESSAGE_INVALID_EDIT)
                 else:
                     utils.show_error(config.MESSAGE_PASSWORD_INVALID_LENGTH)
             else:

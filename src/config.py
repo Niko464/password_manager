@@ -49,6 +49,7 @@ MESSAGE_MAIL_TAKEN = "That email is already registered."
 MESSAGE_USERNAME_TAKEN = "That username is already taken."
 MESSAGE_INVALID_CREDENTIALS = "The entered credentials are incorrect."
 MESSAGE_NAME_ALREADY_EXISTS = "You already have a password with that name registered"
+MESSAGE_INVALID_EDIT = "Can't confirm the edit if you didn't change anything, please cancel."
 
 
 

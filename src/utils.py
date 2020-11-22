@@ -49,7 +49,7 @@ def encode_password(key, password):
         cipher_suite = Fernet(key)
         return cipher_suite.encrypt(bytes(password, encoding="utf8"))
     except Exception as e:
-        print("Unresolvable error in decode_password, exiting")
+        print("Unresolvable error in encode_password, exiting")
         print(str(e))
         sys.exit(-1)
 
@@ -103,17 +103,30 @@ def show_error(msg):
     error_dialog(msg)
 
 
-class error_dialog(QDialog):
+class error_dialog(QMessageBox):
     def __init__(self, msg):
         super().__init__()
-        message_box = QMessageBox()
-        message_box.setStyleSheet('QMessageBox { background-color: ' + config.GRAY_COLOR + ';}'
+        self.setStyleSheet('QMessageBox { background-color: ' + config.GRAY_COLOR + ';}'
                                     'QMessageBox>QWidget>QWidget { background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + '}'
                                     'QMessageBox>QWidget>QWidget::pane { border: 0; }'
                                     'QMessageBox>QLabel { color: ' + config.BASIC_STR_COLOR + '}')
         #message_box.setIcon(QMessageBox.Warning)
-        message_box.setFont(config.BASIC_STR_FONT)
-        message_box.setText(msg)
-        message_box.setWindowTitle(config.ERROR_WINDOW_TITLE)
-        message_box.setStandardButtons(QMessageBox.Ok)
-        message_box.exec()
+        self.setFont(config.BASIC_STR_FONT)
+        self.setText(msg)
+        self.setWindowTitle(config.ERROR_WINDOW_TITLE)
+        self.setStandardButtons(QMessageBox.Ok)
+        self.exec()
+
+
+class confirmation_dialog(QMessageBox):
+    def __init__(self, msg):
+        super().__init__()
+        self.setStyleSheet('QMessageBox { background-color: ' + config.GRAY_COLOR + ';}'
+                                    'QMessageBox>QWidget>QWidget { background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + '}'
+                                    'QMessageBox>QWidget>QWidget::pane { border: 0; }'
+                                    'QMessageBox>QLabel { color: ' + config.BASIC_STR_COLOR + '}')
+        #message_box.setIcon(QMessageBox.Warning)
+        self.setFont(config.BASIC_STR_FONT)
+        self.setText(msg)
+        self.setWindowTitle("Confirmation")
+        self.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)

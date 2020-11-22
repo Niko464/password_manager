@@ -5,27 +5,11 @@ import mysql.connector as mysql
 import src.utils as utils
 import src.sql_utils as sql_utils
 import src.config as config
-import src.add_dialog_class as add_dialog_class
+import src.add_edit_dialog_class as add_edit_dialog_class
 import src.list_object_class as list_object_class
+import src.enums as enums
 import time
 from operator import itemgetter
-"""
-class HoverButton(QToolButton):
-    def __init__(self, parent=None):
-        super(HoverButton, self).__init__(parent)
-        self.setStyleSheet('''border-image: url(images/add.png) 128 128 128 128;
-            border-top: 0px transparent;
-            border-bottom: 64px transparent;
-            border-right: 64px transparent;
-            border-left: 0px transparent;
-            background-color: green;''')
-        #self.setGeometry(0, 0, 0, 0)
-
-    def resizeEvent(self, event):
-        pass
-        #self.setMask(QRegion(self.rect(), QRegion.Ellipse))
-        #QToolButton.resizeEvent(self, event)
-"""
 
 
 class main_wrapper(QMainWindow):
@@ -83,14 +67,13 @@ class main_wrapper(QMainWindow):
         self.container = QWidget()
         self.gui_layout = QVBoxLayout()
 
-        #self.container.setAccessibleName("scroll_area_container")
         self.container.setStyleSheet('QWidget { background-color: transparent;}')
         
         scroll_area.setStyleSheet('QScrollArea {background-color: ' + 'transparent' + ';}'
                                     'QScrollBar { height:0px; }')
         scroll_area.setFrameShape(QFrame.NoFrame)
         
-        scroll_area.setFixedHeight(350)
+        scroll_area.setFixedSize(320, 350)
         
         
         for obj in self.password_list:
@@ -101,6 +84,8 @@ class main_wrapper(QMainWindow):
         self.container.setLayout(self.gui_layout)
 
         scroll_area.setWidget(self.container)
+        scroll_area.setWidgetResizable(True)
+        
         to_return.addStretch(1)
         to_return.addWidget(scroll_area)
         to_return.addStretch(1)
@@ -124,10 +109,17 @@ class main_wrapper(QMainWindow):
 
     def add_to_gui_list(self, name, password):
         # maybe remember something here in order to be able to delete it later on
-        self.gui_layout.insertLayout(0, list_object_class.list_object(name, password))
+        to_add = list_object_class.list_object(name, password, self)
+        """
+        to_add = QHBoxLayout()
+        to_add.addWidget(QLabel("TEST"))
+        to_add.addStretch(1)
+        """
+        self.gui_layout.insertLayout(0, to_add)
+        #to_add.main_widget.updateGeometry()
 
     def add_btn_clicked(self):
-        dialog = add_dialog_class.add_dialog(self)
+        dialog = add_edit_dialog_class.add_edit_dialog(self, enums.ADD_DIALOG_ENUM)
         if (dialog.exec()):
             new_password_info = dialog.get_new_password_info()
             encoded_password = utils.encode_password(utils.get_key_from_master_password(self.user_info["master_password"]), new_password_info["password"])
@@ -152,16 +144,30 @@ class main_wrapper(QMainWindow):
         if (len(levenshtein_distances) == 0):
             return
         # Sort each name's word's distances in ascending order
-        print("normal levenshtein: " + str(levenshtein_distances))
+        #print("normal levenshtein: " + str(levenshtein_distances))
         for i in range(len(levenshtein_distances)):
             levenshtein_distances[i] = sorted(levenshtein_distances[i])
-        print("sorted levenshtein: " + str(levenshtein_distances))
+        #print("sorted levenshtein: " + str(levenshtein_distances))
         # Need to modify this to sort like this, but if the value is the same, then sort by amount of words in name if that's the same, sort by amount of characters in name
         sorted_indexes = sorted(range(len(levenshtein_distances)), key=lambda k: (levenshtein_distances[k][0], len(levenshtein_distances[k]), len(self.password_list[k]["name"])))
-        print("sorted indexes: " + str(sorted_indexes))
-        print("\n\nSorted list: ")
+        #print("sorted indexes: " + str(sorted_indexes))
+        #print("\n\nSorted list: ")
+        counter = 0
         for index in sorted_indexes:
-            print(self.password_list[index]["name"])
+            #print(self.password_list[index]["name"])
+            widget_index = self.get_gui_widget_index_according_to_name(self.password_list[index]["name"])
+            if (widget_index != -1):
+                self.gui_layout.insertLayout(counter, self.gui_layout.takeAt(widget_index))
+            counter += 1
 
         # 12 11 1 0 is the expected result for this test
 
+    def get_gui_widget_index_according_to_name(self, name):
+        for i in range(self.gui_layout.count()):
+            try:
+                widget = self.gui_layout.itemAt(i)
+                if widget.name == name:
+                    return i
+            except Exception as e:
+                print("Error: " + str(e))
+        return -1

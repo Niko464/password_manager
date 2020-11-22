@@ -19,8 +19,9 @@ def save_new_password(owner_id, name, password):
 
         crsr.close()
         connection.close()
-    except:
+    except Exception as e:
         print("Exception in save_new_password, exiting")
+        print(str(e))
         sys.exit(-1)
 
 def get_user_passwords_info(owner_id, master_password):
@@ -75,6 +76,49 @@ def check_if_name_exists(owner_id, name):
         else:
             return False
 
-    except:
+    except Exception as e:
         print("Exception in check_if_name_exists, exiting")
+        print(str(e))
+        sys.exit(-1)
+
+def update_existing_password(owner_id, old_name, new_name, new_hased_password):
+    try:
+        connection = mysql.connect(
+                host = private_config.MYSQL_HOST,
+                user = private_config.MYSQL_USER,
+                passwd = private_config.MYSQL_PASS,
+                database = private_config.MYSQL_DATABASE
+            )
+        crsr = connection.cursor()
+        sql_query = """UPDATE passwords SET name = %s, password = %s WHERE name = %s AND owner_id = %s;"""
+        sql_args = (new_name, new_hased_password, old_name, owner_id)
+        crsr.execute(sql_query, sql_args)
+        connection.commit()
+        
+        crsr.close()
+        connection.close()
+    except Exception as e:
+        print("Exception in update_existing_password, exiting")
+        print(str(e))
+        sys.exit(-1)
+
+def remove_password(owner_id, name):
+    try:
+        connection = mysql.connect(
+                host = private_config.MYSQL_HOST,
+                user = private_config.MYSQL_USER,
+                passwd = private_config.MYSQL_PASS,
+                database = private_config.MYSQL_DATABASE
+            )
+        crsr = connection.cursor()
+        sql_query = """DELETE FROM passwords WHERE name = %s AND owner_id = %s;"""
+        sql_args = (name, owner_id)
+        crsr.execute(sql_query, sql_args)
+        connection.commit()
+        
+        crsr.close()
+        connection.close()
+    except Exception as e:
+        print("Exception in remove_password, exiting")
+        print(str(e))
         sys.exit(-1)
