@@ -51,7 +51,8 @@ class main_wrapper(QMainWindow):
         self.main_layout.addLayout(self.upper_widget)
         self.main_layout.addLayout(self.middle_layout)
         self.main_layout.addWidget(self.lower_widget)
-        self.central_widget.setStyleSheet('QWidget {background-color: ' + config.GRAY_COLOR + ';}')
+        self.central_widget.setObjectName("main_background")
+        self.central_widget.setStyleSheet('QWidget#main_background {background-color: ' + config.GRAY_COLOR + ';}')
 
         self.central_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.central_widget)
@@ -82,17 +83,22 @@ class main_wrapper(QMainWindow):
         self.container = QWidget()
         self.gui_layout = QVBoxLayout()
 
-        self.container.setAccessibleName("scroll_area_container")
-        scroll_area.setStyleSheet('QScrollArea {background-color: ' + config.LIGHT_GRAY_COLOR + ';}')
-        scroll_area.setFixedSize(350, 350)
+        #self.container.setAccessibleName("scroll_area_container")
+        self.container.setStyleSheet('QWidget { background-color: transparent;}')
+        
+        scroll_area.setStyleSheet('QScrollArea {background-color: ' + 'transparent' + ';}'
+                                    'QScrollBar { height:0px; }')
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        
+        scroll_area.setFixedHeight(350)
         
         
         for obj in self.password_list:
+        #obj = self.password_list[0]
             self.add_to_gui_list(obj["name"], obj["password"])
         self.gui_layout.addStretch(1)
 
         self.container.setLayout(self.gui_layout)
-        self.container.setStyleSheet('QWidget#list_object_widget { background-color: yellow; border-radius: 10px;}')
 
         scroll_area.setWidget(self.container)
         to_return.addStretch(1)
@@ -117,9 +123,8 @@ class main_wrapper(QMainWindow):
         return to_return
 
     def add_to_gui_list(self, name, password):
-        self.gui_layout.addWidget(list_object_class.list_object(name, password, self.container))
-        self.gui_layout.addItem(QSpacerItem(10, 50, QSizePolicy.Expanding, QSizePolicy.Minimum))
         # maybe remember something here in order to be able to delete it later on
+        self.gui_layout.insertLayout(0, list_object_class.list_object(name, password))
 
     def add_btn_clicked(self):
         dialog = add_dialog_class.add_dialog(self)
@@ -159,3 +164,4 @@ class main_wrapper(QMainWindow):
             print(self.password_list[index]["name"])
 
         # 12 11 1 0 is the expected result for this test
+
