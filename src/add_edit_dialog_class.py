@@ -44,7 +44,7 @@ class add_edit_dialog(QDialog):
                                             'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
                                             'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
 
-        self.password_label = QLabel("Master Password:")
+        self.password_label = QLabel("Password:")
         self.password_label.setFont(config.BASIC_STR_FONT)
         self.password_label.setStyleSheet('QLabel {color: ' + config.BASIC_STR_COLOR + '}')
 

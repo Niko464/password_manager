@@ -110,7 +110,6 @@ class error_dialog(QMessageBox):
                                     'QMessageBox>QWidget>QWidget { background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + '}'
                                     'QMessageBox>QWidget>QWidget::pane { border: 0; }'
                                     'QMessageBox>QLabel { color: ' + config.BASIC_STR_COLOR + '}')
-        #message_box.setIcon(QMessageBox.Warning)
         self.setFont(config.BASIC_STR_FONT)
         self.setText(msg)
         self.setWindowTitle(config.ERROR_WINDOW_TITLE)
@@ -125,8 +124,21 @@ class confirmation_dialog(QMessageBox):
                                     'QMessageBox>QWidget>QWidget { background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + '}'
                                     'QMessageBox>QWidget>QWidget::pane { border: 0; }'
                                     'QMessageBox>QLabel { color: ' + config.BASIC_STR_COLOR + '}')
-        #message_box.setIcon(QMessageBox.Warning)
         self.setFont(config.BASIC_STR_FONT)
         self.setText(msg)
         self.setWindowTitle("Confirmation")
         self.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+
+        
+class info_dialog(QMessageBox):
+    def __init__(self, msg):
+        super().__init__()
+        self.setStyleSheet('QMessageBox { background-color: ' + config.GRAY_COLOR + ';}'
+                                    'QMessageBox>QWidget>QWidget { background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + '}'
+                                    'QMessageBox>QWidget>QWidget::pane { border: 0; }'
+                                    'QMessageBox>QLabel { color: ' + config.BASIC_STR_COLOR + '}')
+        self.setFont(config.BASIC_STR_FONT)
+        self.setText(msg)
+        self.setWindowTitle("Information")
+        self.setStandardButtons(QMessageBox.Ok)
+        self.exec()

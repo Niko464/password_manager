@@ -312,7 +312,7 @@ class sign_up_tab(QWidget):
 
                                 crsr.close()
                                 connection.close()
-                                self.parent.accept()
+                                utils.info_dialog("Success !")
 
                             except Exception as e:
                                 utils.show_error("An Unusual error occurred...\n" + str(e))
