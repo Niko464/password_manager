@@ -80,6 +80,25 @@ def get_key_from_master_password(master_password):
         print(str(e))
         sys.exit(-1)
 
+def min_edit_distance(word1, word2):
+    matrix = [[0 for i in range(len(word1) + 1)] for j in range(len(word2) + 1)]
+
+    for i in range(1, len(word1) + 1):
+        matrix[0][i] = i
+    for j in range(1, len(word2) + 1):
+        matrix[j][0] = j
+
+    for j in range(1, len(word2) + 1):
+        for i in range(1, len(word1) + 1):
+            if (word2[j - 1] == word1[i - 1]):
+                matrix[j][i] = matrix[j - 1][i - 1]
+            else:
+                matrix[j][i] = min(matrix[j - 1][i], matrix[j][i - 1], matrix[j - 1][i - 1]) + 1
+
+    return matrix[len(word2)][len(word1)]
+
+    
+
 def show_error(msg):
     error_dialog(msg)
 

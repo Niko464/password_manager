@@ -6,11 +6,11 @@ import src.config as config
 from qtwidgets import PasswordEdit
 
 class list_object(QWidget):
-    def __init__(self, name, password):
-        super().__init__()
+    def __init__(self, name, password, parent):
+        super().__init__(parent=parent)
         print("Creating object: name: " + str(name) + " password: " + str(password))
         self.create_ui(name, password)
-    
+
     def create_ui(self, name, password):
         self.main_layout = QHBoxLayout()
         self.left_layout = QVBoxLayout()
@@ -43,6 +43,8 @@ class list_object(QWidget):
         #ADD COPY MODIFY AND DELETE TO RIGHT LAYOUT
 
         #self.right_layout.addWidget()
+        self.setObjectName("list_object_widget")
+        #print(self.parentWidget().accessibleName())
         self.setStyleSheet('QWidget { background-color: ' + 'green' + ';}')
         self.setLayout(self.main_layout)
 

@@ -7,9 +7,11 @@ DARK_GRAY_COLOR = "#202225"
 GRAY_COLOR = "#2f3136"
 LIGHT_GRAY_COLOR = "#36393f"
 
+DARK_BLUE_PLUS_COLOR = "#5b6eae"
 DARK_BLUE_COLOR = "#677bc4"
 BLUE_COLOR = "#7086d5"
 
+DARK_RED_PLUS_COLOR = "#c03939"
 DARK_RED_COLOR = "#d84040"
 RED_COLOR = "#f04747"
 
@@ -46,3 +48,22 @@ MESSAGE_CONFIRMATION_PASS_DIFFERENT_PASS = "Your confirmation password is differ
 MESSAGE_MAIL_TAKEN = "That email is already registered."
 MESSAGE_USERNAME_TAKEN = "That username is already taken."
 MESSAGE_INVALID_CREDENTIALS = "The entered credentials are incorrect."
+MESSAGE_NAME_ALREADY_EXISTS = "You already have a password with that name registered"
+
+
+
+# STYLE SHEETS
+
+BASIC_BLUE_BTN_STYLE_SHEET = """
+                            QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: """ + BLUE_COLOR + """
+                            ;color: """ + BASIC_STR_COLOR + """
+                            } QPushButton:hover {background-color: """ + DARK_BLUE_COLOR + """
+                            } QPushButton:pressed {background-color: """ + DARK_BLUE_PLUS_COLOR + """}
+                            """
+
+BASIC_RED_BTN_STYLE_SHEET = """
+                            QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: """ + RED_COLOR + """
+                            ;color: """ + BASIC_STR_COLOR + """
+                            } QPushButton:hover {background-color: """ + DARK_RED_COLOR + """
+                            } QPushButton:pressed {background-color: """ + DARK_RED_PLUS_COLOR + """}
+                            """

@@ -15,6 +15,7 @@ def main():
     else:
         sys.exit(0)
     """
+
     main = main_wrapper_class.main_wrapper({"user_id": 3, "master_password": "cacacaca"})
     main.show()
     sys.exit(app.exec_())

@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 from qtwidgets import PasswordEdit
 import src.utils as utils
 import src.config as config
+import src.sql_utils as sql_utils
 import random
 import clipboard
 
@@ -12,6 +13,7 @@ class add_dialog(QDialog):
         super().__init__()
         self.width = main_wrapper.width
         self.height = main_wrapper.height
+        self.main_wrapper = main_wrapper
         self.create_ui()
 
     def create_ui(self):
@@ -68,18 +70,14 @@ class add_dialog(QDialog):
 
         self.generate_password_btn = QPushButton("Generate")
         self.generate_password_btn.setFixedSize((self.width - 100) / 2, self.height * 0.06)
-        self.generate_password_btn.setStyleSheet('QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: ' + config.BLUE_COLOR + ';'
-                                                'color: ' + config.BASIC_STR_COLOR +  '}'
-                                                'QPushButton:hover {background-color: ' + config.DARK_BLUE_COLOR + '}')
-        self.generate_password_btn.released.connect(self.generate_password_clicked)
+        self.generate_password_btn.setStyleSheet(config.BASIC_BLUE_BTN_STYLE_SHEET)
+        self.generate_password_btn.clicked.connect(self.generate_password_clicked)
 
 
         self.copy_password_btn = QPushButton("Copy")
         self.copy_password_btn.setFixedSize((self.width - 100) / 2, self.height * 0.06)
-        self.copy_password_btn.setStyleSheet('QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: ' + config.BLUE_COLOR + ';'
-                                                'color: ' + config.BASIC_STR_COLOR +  '}'
-                                                'QPushButton:hover {background-color: ' + config.DARK_BLUE_COLOR + '}')
-        self.copy_password_btn.released.connect(self.copy_password_btn_clicked)
+        self.copy_password_btn.setStyleSheet(config.BASIC_BLUE_BTN_STYLE_SHEET)
+        self.copy_password_btn.clicked.connect(self.copy_password_btn_clicked)
 
         self.generate_copy_layout = QHBoxLayout()
         self.generate_copy_layout.addWidget(self.generate_password_btn)
@@ -87,18 +85,14 @@ class add_dialog(QDialog):
 
         self.add_btn = QPushButton("Add")
         self.add_btn.setFixedSize((self.width - 100) / 2, self.height * 0.10)
-        self.add_btn.setStyleSheet('QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: ' + config.BLUE_COLOR + ';'
-                                                'color: ' + config.BASIC_STR_COLOR +  '}'
-                                                'QPushButton:hover {background-color: ' + config.DARK_BLUE_COLOR + '}')
-        self.add_btn.released.connect(self.add_btn_clicked)
+        self.add_btn.setStyleSheet(config.BASIC_BLUE_BTN_STYLE_SHEET)
+        self.add_btn.clicked.connect(self.add_btn_clicked)
 
 
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.setFixedSize((self.width - 100) / 2, self.height * 0.10)
-        self.cancel_btn.setStyleSheet('QPushButton { font-size: 18pt; font-family: Cursive; border-radius: 15px; background-color: ' + config.RED_COLOR + ';'
-                                                'color: ' + config.BASIC_STR_COLOR +  '}'
-                                                'QPushButton:hover {background-color: ' + config.DARK_RED_COLOR + '}')
-        self.cancel_btn.released.connect(self.cancel_btn_clicked)
+        self.cancel_btn.setStyleSheet(config.BASIC_RED_BTN_STYLE_SHEET)
+        self.cancel_btn.clicked.connect(self.cancel_btn_clicked)
 
         self.add_cancel_layout = QHBoxLayout()
         self.add_cancel_layout.addWidget(self.cancel_btn)
@@ -168,7 +162,10 @@ class add_dialog(QDialog):
         if (name_str != "" and password_str != "" and confirmation_password_str != ""):
             if (password_str == confirmation_password_str):
                 if (len(password_str) <= config.MAX_PASSWORD_LENGTH):
-                    self.accept()
+                    if (not sql_utils.check_if_name_exists(self.main_wrapper.user_info["user_id"], name_str)):
+                        self.accept()
+                    else:
+                        utils.show_error(config.MESSAGE_NAME_ALREADY_EXISTS)
                 else:
                     utils.show_error(config.MESSAGE_PASSWORD_INVALID_LENGTH)
             else:
