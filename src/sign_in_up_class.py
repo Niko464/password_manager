@@ -3,10 +3,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from qtwidgets import PasswordEdit
 import bcrypt
-import mysql.connector as mysql
 import src.utils as utils
 import src.config as config
-import src.private_config as private_config
+import src.utils_server as utils_server
 
 class sign_in_up(QDialog):
     def __init__(self):
@@ -14,7 +13,7 @@ class sign_in_up(QDialog):
         self.main_layout = QGridLayout()
         self.width = 400
         self.height = 500
-        self.user_info = {"user_id": "", "master_password": ""}
+        self.user_info = {"hashed_master_password": "", "master_password": ""}
         self.create_ui()
 
     def create_ui(self):
@@ -105,33 +104,14 @@ class sign_in_tab(QWidget):
 
         if (username_str != "" and password_str != ""):
             try:
-                username_or_mail = ("username" if not "@" in username_str else "mail")
-                connection = mysql.connect(
-                            host = private_config.MYSQL_HOST,
-                            user = private_config.MYSQL_USER,
-                            passwd = private_config.MYSQL_PASS,
-                            database = private_config.MYSQL_DATABASE
-                        )
-                crsr = connection.cursor()
-                sql_query = """SELECT * FROM users WHERE """ + username_or_mail + """ = %s"""
-                sql_args = (username_str, )
-                crsr.execute(sql_query, sql_args)
-                for row in crsr.fetchall():
-                    try:
-                        if bcrypt.checkpw(password_str.encode("utf-8"), bytes(row[3])):
-                            self.parent.user_info["user_id"] = row[0]
-                            self.parent.user_info["master_password"] = password_str
-                            crsr.close()
-                            connection.close()
-                            self.parent.accept()
-                            return
-                    except KeyError as e:
-                        utils.show_error("KeyError - Should never happen...")
-                utils.show_error(config.MESSAGE_INVALID_CREDENTIALS)
+                result = utils_server.try_logging_in(username_str, password_str)
+                if ("Logged In" in result[0]):
+                    self.parent.user_info["hashed_master_password"] = result[1]
+                    self.parent.user_info["master_password"] = password_str
+                    self.parent.accept()
                 return
-
             except Exception as e:
-                utils.show_error("An Unusual error occurred...\n" + str(e))
+                utils.show_error(msg=config.MESSAGE_DATABASE_DOWN + str(e), should_quit=True)
         else:
             utils.show_error(config.MESSAGE_FILL_IN_INFO)
     
@@ -201,6 +181,7 @@ class sign_up_tab(QWidget):
                                             'QLineEdit:hover {border: 1px solid ' + config.BLACK_COLOR + ';}'
                                             'QLineEdit:focus {border: 2px solid ' + config.BLUE_COLOR + ';}')
         self.confirmation_password_field.textEdited.connect(self.confirmation_pass_line_edit_changed)
+        self.confirmation_password_field.returnPressed.connect(self.sign_up_clicked)
 
         self.sign_up_btn = QPushButton("Sign Up")
         self.sign_up_btn.setFixedSize(self.width - 100, (self.height * 0.10))
@@ -261,61 +242,26 @@ class sign_up_tab(QWidget):
         password_str = self.password_field.text()
         password_confirmation_str = self.confirmation_password_field.text()
         if (username_str != "" and mail_str != "" and password_str != "" and password_confirmation_str != ""):
-            print(mail_str)
+            if ("@" in username_str):
+                utils.show_error(config.MESSAGE_USERNAME_NO_AT_SYMBOL)
+                return
             if ("@" in mail_str):
                 if (len(username_str) >= config.MIN_USERNAME_SIZE):
                     if (len(password_str) >= config.MIN_MASTER_PASSWORD_SIZE):
                         if (password_str == password_confirmation_str):
                             try:
-                                nbr_usernames = 0
-                                nbr_mails = 0
-                                connection = mysql.connect(
-                                    host = private_config.MYSQL_HOST,
-                                    user = private_config.MYSQL_USER,
-                                    passwd = private_config.MYSQL_PASS,
-                                    database = private_config.MYSQL_DATABASE
-                                )
-                                crsr = connection.cursor()
-                                sql_query = """SELECT * FROM users WHERE username = %s"""
-                                sql_args = (username_str, )
-                                crsr.execute(sql_query, sql_args)
-
-                                for _ in crsr.fetchall():
-                                    nbr_usernames += 1
-                                    break
-                                
-                                sql_query = """SELECT * FROM users WHERE mail = %s"""
-                                sql_args = (mail_str, )
-                                crsr.execute(sql_query, sql_args)
-
-                                for _ in crsr.fetchall():
-                                    nbr_mails += 1
-                                    break
-                            
-                                
-                                if (nbr_usernames != 0):
-                                    utils.show_error(config.MESSAGE_USERNAME_TAKEN)
-                                    crsr.close()
-                                    connection.close()
-                                    return
-                                if (nbr_mails != 0):
-                                    utils.show_error(config.MESSAGE_MAIL_TAKEN)
-                                    crsr.close()
-                                    connection.close()
-                                    return
                                 hashed_pass = bcrypt.hashpw(password_str.encode("utf-8"), bcrypt.gensalt())
-                                
-                                sql_query = """INSERT INTO users (username, mail, master_password) VALUES (%s,%s, _binary %s)"""
-                                sql_args = (username_str, mail_str, hashed_pass)
-                                crsr.execute(sql_query, sql_args)
-                                connection.commit()
-
-                                crsr.close()
-                                connection.close()
-                                utils.info_dialog("Success !")
-
-                            except Exception as e:
-                                utils.show_error("An Unusual error occurred...\n" + str(e))
+                                result = utils_server.try_signing_up(username_str, mail_str, hashed_pass)
+                                if (result['code'] == 0):
+                                    utils.info_dialog(result['message'])
+                                    self.parent.user_info["hashed_master_password"] = result['hashed_master_password']
+                                    self.parent.user_info["master_password"] = password_str
+                                    self.parent.accept()
+                                else:
+                                    utils.show_error(result['message'])
+                                return
+                            except:
+                                utils.show_error(msg=config.MESSAGE_DATABASE_DOWN, should_quit=True)
                         else:
                             utils.show_error(config.MESSAGE_CONFIRMATION_PASS_DIFFERENT_PASS)
                     else:

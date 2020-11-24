@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import src.sign_in_up_class as sign_in_up_class
 import src.main_wrapper_class as main_wrapper_class
+import src.utils as utils
 import sys
 
 def main():
@@ -14,6 +15,7 @@ def main():
         main.show()
     else:
         sys.exit(0)
+    
     """
     
     main = main_wrapper_class.main_wrapper({"user_id": 3, "master_password": "cacacaca"})

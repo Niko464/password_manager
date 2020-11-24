@@ -3,7 +3,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import mysql.connector as mysql
 import src.utils as utils
-import src.sql_utils as sql_utils
+import src.utils_server as utils_server
+import src.utils_encryption as utils_encryption
 import src.config as config
 import src.add_edit_dialog_class as add_edit_dialog_class
 import src.list_object_class as list_object_class
@@ -20,7 +21,7 @@ class main_wrapper(QMainWindow):
         self.width = 400
         self.height = 500
         self.user_info = user_info
-        self.password_list = sql_utils.get_user_passwords_info(user_info["user_id"], user_info["master_password"])
+        self.password_list = utils_server.get_user_passwords_info(user_info["hashed_master_password"], user_info["master_password"])
         self.create_ui()
 
     def create_ui(self):
@@ -122,10 +123,13 @@ class main_wrapper(QMainWindow):
         dialog = add_edit_dialog_class.add_edit_dialog(self, enums.ADD_DIALOG_ENUM)
         if (dialog.exec()):
             new_password_info = dialog.get_new_password_info()
-            encoded_password = utils.encode_password(utils.get_key_from_master_password(self.user_info["master_password"]), new_password_info["password"])
-            sql_utils.save_new_password(self.user_info["user_id"], new_password_info["name"], encoded_password)
-            self.add_to_gui_list(new_password_info["name"], new_password_info["password"])
-            self.password_list.append(new_password_info)
+            encrypted_password = utils_encryption.encode_password(utils_encryption.get_key_from_master_password(self.user_info["master_password"]), new_password_info["password"])
+            server_result = utils_server.save_new_password(self.user_info["hashed_master_password"], new_password_info["name"], encrypted_password)
+            if server_result['code'] == 0:
+                self.add_to_gui_list(new_password_info["name"], new_password_info["password"])
+                self.password_list.append(new_password_info)
+            else:
+                utils.show_error(server_result['message'])
 
 
     def search_btn_clicked(self):

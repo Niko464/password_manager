@@ -2,7 +2,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import src.utils as utils
-import src.sql_utils as sql_utils
+import src.utils_server as utils_server
+import src.utils_encryption as utils_encryption
 import src.config as config
 import src.enums as enums
 import src.add_edit_dialog_class as add_edit_dialog_class
@@ -82,22 +83,24 @@ class list_object(QHBoxLayout):
         dialog = add_edit_dialog_class.add_edit_dialog(self.main_wrapper, enums.EDIT_DIALOG_ENUM, {"name": self.name, "password": self.password})
         if (dialog.exec()):
             new_info = dialog.get_new_password_info()
-            self.password_line_edit.setText(new_info["password"])
-            self.name_label.setText("Name: " + self.get_formated_name(new_info["name"]))
             # DO THE SQL QUERY
-            hashed_password = utils.encode_password(utils.get_key_from_master_password(self.main_wrapper.user_info["master_password"]), new_info["password"])
-            sql_utils.update_existing_password(self.main_wrapper.user_info["user_id"], self.name, new_info["name"], hashed_password)
-            self.name = new_info["name"]
-            self.password = new_info["password"]
+            encrypted_password = utils_encryption.encode_password(utils_encryption.get_key_from_master_password(self.main_wrapper.user_info["master_password"]), new_info["password"])
+            server_result = utils_server.update_existing_password(self.main_wrapper.user_info["hashed_master_password"], self.name, new_info["name"], encrypted_password)
+            if (server_result == True):
+                self.password_line_edit.setText(new_info["password"])
+                self.name_label.setText("Name: " + self.get_formated_name(new_info["name"]))
+                self.name = new_info["name"]
+                self.password = new_info["password"]
 
     def delete_btn_clicked(self):
         confirm_dialog = utils.confirmation_dialog("Are you sure you want to delete '" + self.name + "' ?")
         if (confirm_dialog.exec() == QMessageBox.Yes):
-            sql_utils.remove_password(self.main_wrapper.user_info["user_id"], self.name)
-            for obj in self.main_wrapper.password_list:
-                if (obj["name"] == self.name):
-                    self.main_wrapper.password_list.remove(obj)
-                    break
+            server_result = utils_server.remove_password(self.main_wrapper.user_info["hashed_master_password"], self.name)
+            if (server_result == True):
+                for obj in self.main_wrapper.password_list:
+                    if (obj["name"] == self.name):
+                        self.main_wrapper.password_list.remove(obj)
+                        break
             # the next line removes this widget from the GUI
             self.main_widget.setParent(None)
             self.setParent(None)

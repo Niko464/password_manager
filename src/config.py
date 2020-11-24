@@ -1,5 +1,7 @@
 from PyQt5.QtGui import *
 
+BUFFER = ""
+
 # COLORS
 BLACK_COLOR = "#0a0a0a"
 
@@ -27,12 +29,14 @@ MAX_MASTER_PASSWORD_SIZE = 40
 MIN_MASTER_PASSWORD_SIZE = 8
 MAX_NAME_SIZE = 255
 ERROR_WINDOW_TITLE = "Error"
+HEADER_SIZE = 10
+DEVELOPPER = "Nikolaj"
 
 # PASSWORD GENERATION
 
 MIN_PASSWORD_GENERATION_LENGTH = 12
 MAX_PASSWORD_GENERATION_LENGTH = 20
-MAX_PASSWORD_LENGTH = 255
+MAX_PASSWORD_LENGTH = 200
 ALPHABET = "AzByCxDwEvFuGtHsIrJqKpLoMnNmOlPkQjRiShTgUfVeWdXcYbZa"
 NUMBERS = "0123456789"
 SPECIAL_CHARS = ".=?/:\\_!"
@@ -50,6 +54,12 @@ MESSAGE_USERNAME_TAKEN = "That username is already taken."
 MESSAGE_INVALID_CREDENTIALS = "The entered credentials are incorrect."
 MESSAGE_NAME_ALREADY_EXISTS = "You already have a password with that name registered"
 MESSAGE_INVALID_EDIT = "Can't confirm the edit if you didn't change anything, please cancel."
+MESSAGE_DATABASE_DOWN = "We encountered an error, the database is probably down, sorry..."
+MESSAGE_SOCKET_CONNECTED = "Connected"
+MESSAGE_FAILED_TO_CONNECT_SERVER = "Failed to connect to the server.\nPlease ask " + DEVELOPPER + " what's going on."
+MESSAGE_ERROR_SERVER_SIDE = "An error occurred server side."
+MESSAGE_UNUSUAL_ERROR = "An Unusual error occurred, please report this message to " + DEVELOPPER + "."
+MESSAGE_USERNAME_NO_AT_SYMBOL = "Your username can't contain an '@' symbol."
 
 
 

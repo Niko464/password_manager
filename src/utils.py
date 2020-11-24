@@ -1,11 +1,6 @@
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from cryptography.fernet import Fernet
-import base64
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import src.config as config
 import random
 import sys
@@ -44,42 +39,6 @@ def create_random_password(length):
             password += config.ALPHABET[random.randint(0, len_alphabet_chars - 1)]
     return password
 
-def encode_password(key, password):
-    try:
-        cipher_suite = Fernet(key)
-        return cipher_suite.encrypt(bytes(password, encoding="utf8"))
-    except Exception as e:
-        print("Unresolvable error in encode_password, exiting")
-        print(str(e))
-        sys.exit(-1)
-
-def decode_password(key, encrypted_password):
-    try:
-        cipher_suite = Fernet(key)
-        return cipher_suite.decrypt(encrypted_password)
-    except Exception as e:
-        print("Unresolvable error in decode_password, exiting")
-        print(str(e))
-        sys.exit(-1)
-
-def get_key_from_master_password(master_password):
-    try:
-        password_bytes = master_password.encode()
-        salt = b'SALT'
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=100000,
-            backend=default_backend()
-        )
-        key = base64.urlsafe_b64encode(kdf.derive(password_bytes))
-        return key
-    except Exception as e:
-        print("Unresolvable error in get_key_from_master_password, exiting")
-        print(str(e))
-        sys.exit(-1)
-
 def min_edit_distance(word1, word2):
     matrix = [[0 for i in range(len(word1) + 1)] for j in range(len(word2) + 1)]
 
@@ -99,12 +58,12 @@ def min_edit_distance(word1, word2):
 
     
 
-def show_error(msg):
-    error_dialog(msg)
+def show_error(msg, should_quit = False):
+    error_dialog(msg, should_quit)
 
 
 class error_dialog(QMessageBox):
-    def __init__(self, msg):
+    def __init__(self, msg, should_quit):
         super().__init__()
         self.setStyleSheet('QMessageBox { background-color: ' + config.GRAY_COLOR + ';}'
                                     'QMessageBox>QWidget>QWidget { background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + '}'
@@ -115,6 +74,8 @@ class error_dialog(QMessageBox):
         self.setWindowTitle(config.ERROR_WINDOW_TITLE)
         self.setStandardButtons(QMessageBox.Ok)
         self.exec()
+        if (should_quit == True):
+            sys.exit(-1)
 
 
 class confirmation_dialog(QMessageBox):

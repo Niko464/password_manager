@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import *
 from qtwidgets import PasswordEdit
 import src.utils as utils
 import src.config as config
-import src.sql_utils as sql_utils
+import src.utils_server as utils_server
 import src.enums as enums
 import random
 import clipboard
@@ -176,7 +176,7 @@ class add_edit_dialog(QDialog):
             if (password_str == confirmation_password_str):
                 if (len(password_str) <= config.MAX_PASSWORD_LENGTH):
                     if (self.type == enums.ADD_DIALOG_ENUM):
-                        if (not sql_utils.check_if_name_exists(self.main_wrapper.user_info["user_id"], name_str)):
+                        if (not utils_server.check_if_name_exists(self.main_wrapper.user_info["hashed_master_password"], name_str)):
                             self.accept()
                         else:
                             utils.show_error(config.MESSAGE_NAME_ALREADY_EXISTS)
