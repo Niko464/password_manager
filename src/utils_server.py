@@ -3,7 +3,9 @@ import src.utils as utils
 import src.config as config
 import src.utils_encryption as utils_encryption
 import socket
-import pickle
+#import pickle
+import json
+import time
 
 SERVER_IP = "45.140.164.47" #"45.140.164.47"
 SERVER_PORT = 1234
@@ -15,7 +17,7 @@ def save_new_password(hashed_master_password, name, encrypted_password):
         msg = receive_message(server_socket)
         try:
             if (msg['code'] == 0):
-                send_message(server_socket, {'code': 5, 'hashed_master_password': hashed_master_password, 'name': name, 'encrypted_password': encrypted_password})
+                send_message(server_socket, {'code': 5, 'hashed_master_password': hashed_master_password, 'name': name, 'encrypted_password': encrypted_password.decode()})
                 response = receive_message(server_socket)
                 return response
             else:
@@ -79,7 +81,7 @@ def update_existing_password(hashed_master_password, old_name, new_name, new_enc
         msg = receive_message(server_socket)
         try:
             if (msg['code'] == 0):
-                send_message(server_socket, {'code': 6, 'hashed_master_password': hashed_master_password, 'old_name': old_name, 'new_name': new_name, 'new_encrypted_password': new_encrypted_password})
+                send_message(server_socket, {'code': 6, 'hashed_master_password': hashed_master_password, 'old_name': old_name, 'new_name': new_name, 'new_encrypted_password': new_encrypted_password.decode()})
                 response = receive_message(server_socket)
                 if (response['code'] == 0):
                     return True
@@ -150,7 +152,7 @@ def try_signing_up(username_str, mail_str, hashed_pass):
         msg = receive_message(server_socket)
         try:
             if (msg['code'] == 0):
-                send_message(server_socket, {'code': 2, 'username_str': username_str, 'mail_str': mail_str, 'hashed_pass': hashed_pass})
+                send_message(server_socket, {'code': 2, 'username_str': username_str, 'mail_str': mail_str, 'hashed_pass': hashed_pass.decode()})
                 response = receive_message(server_socket)
                 return response
             else:
@@ -161,9 +163,14 @@ def try_signing_up(username_str, mail_str, hashed_pass):
         utils.show_error(config.MESSAGE_FAILED_TO_CONNECT_SERVER + "\n" + str(e), should_quit=True)
 
 def send_message(socket_to_send_to, msg):
-    to_send = pickle.dumps(msg)
-    to_send = bytes(f'{len(to_send):<{config.HEADER_SIZE}}', 'utf-8') + to_send
-    socket_to_send_to.send(to_send)
+    try:
+        to_send = json.dumps(msg)
+        to_send = bytes(f'{len(to_send):<{config.HEADER_SIZE}}' + str(to_send), 'utf-8')
+        socket_to_send_to.sendall(to_send)
+    except Exception as e:
+        utils.show_error(config.MESSAGE_UNUSUAL_ERROR + "\n" + str(e))
+        return False
+
 
 def receive_message(socket_to_send_to):
     try:
@@ -172,7 +179,20 @@ def receive_message(socket_to_send_to):
         if not len(msg_header):
             return False
         msg_len = int(msg_header)
-        to_return = pickle.loads(socket_to_send_to.recv(msg_len))
+        if msg_len > 256:
+            data = []
+            while (msg_len > 0):
+                packet = socket_to_send_to.recv(256)
+                if not packet:
+                    break
+                #print("Received packet: " + str(packet) + "\n\n")
+                data.append(packet)
+                msg_len -= 256
+                time.sleep(0.001)
+            to_return = json.loads(b"".join(data))
+        else:
+            to_return = json.loads(socket_to_send_to.recv(msg_len).decode('utf-8'))
         return to_return
-    except:
+    except Exception as e:
+        utils.show_error(config.MESSAGE_UNUSUAL_ERROR + "\n" + str(e))
         return False
