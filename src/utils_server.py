@@ -39,9 +39,13 @@ def get_user_passwords_info(hashed_master_password, master_password):
                 send_message(server_socket, {'code': 3, 'hashed_master_password': hashed_master_password})
                 response = receive_message(server_socket)
                 # Decrypting passwords here !
-                fernet_key = utils_encryption.get_key_from_master_password(master_password)
-                for row in response['results']:
-                    to_return.append({"name": row['name'], "password": utils_encryption.decode_password(fernet_key, bytes(row['encrypted_password'], encoding="utf8")).decode()})
+                if (response['code'] == 0):
+                    fernet_key = utils_encryption.get_key_from_master_password(master_password)
+                    print("to_remove in utils_server: " + str(response))
+                    for row in response['results']:
+                        to_return.append({"name": row['name'], "password": utils_encryption.decode_password(fernet_key, bytes(row['encrypted_password'], encoding="utf8")).decode()})
+                else:
+                    utils.show_error(response['message'])
             else:
                 utils.show_error(config.MESSAGE_DATABASE_DOWN)
         except Exception as e:

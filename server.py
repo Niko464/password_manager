@@ -8,6 +8,12 @@ import bcrypt
 import select
 import json
 import time
+from datetime import datetime
+
+old_print = print
+def timestamped_print(*args, **kwargs):
+    old_print(datetime.now(), *args, **kwargs)
+print = timestamped_print
 
 
 MYSQL_HOST = "127.0.0.1"
@@ -18,7 +24,7 @@ MYSQL_DATABASE = "password_manager"
 SERVER_IP = "45.140.164.47" #"45.140.164.47"
 SERVER_PORT = 1234
 
-PREFIX = "SERVER >> "
+PREFIX = ">> "
 
 sockets_list = []
 clients = {}
@@ -142,8 +148,6 @@ def save_new_password(hashed_master_password, name, password):
         user_id = crsr.fetchone()[0]
 
         sql_query = """INSERT INTO passwords (owner_id, name, password) VALUES (%s,%s,%s);"""
-        print("password: ")
-        print(password)
         sql_args = (user_id, name, bytes(password, 'utf-8'))
         crsr.execute(sql_query, sql_args)
         connection.commit()
@@ -172,7 +176,7 @@ def get_user_passwords_info(hashed_master_password):
 
         user_id = crsr.fetchone()[0]
 
-        sql_query = """SELECT * FROM passwords WHERE owner_id = %s;"""
+        sql_query = """SELECT Id, owner_id, name, TRIM(TRAILING CHAR(0) FROM password) as password FROM passwords WHERE owner_id = %s;"""
         sql_args = (user_id, )
         crsr.execute(sql_query, sql_args)
         
