@@ -22,6 +22,8 @@ BASIC_STR_FONT = QFont('Cursive', 14)
 
 # GENERAL
 
+MAX_COMMENT_SIZE = 1024
+MAX_PIN_CODE_SIZE = 10
 MAX_EMAIL_SIZE = 45
 MAX_USERNAME_SIZE = 20
 MIN_USERNAME_SIZE = 4
@@ -43,10 +45,11 @@ SPECIAL_CHARS = ".=?/:\\_!"
 
 # ERROR MESSAGES
 
-MESSAGE_FILL_IN_INFO = "Please fill in all the information"
+MESSAGE_FILL_IN_INFO = "Please fill in all the 'Required' information"
 MESSAGE_INVALID_MAIL = "You need to enter a valid email."
 MESSAGE_USERNAME_INVALID_LENGTH = "Your username's length has to be longer or equal to " + str(MIN_USERNAME_SIZE) + " characters."
 MESSAGE_PASSWORD_INVALID_LENGTH = "Your password's length has to be shorter than " + str(MAX_PASSWORD_LENGTH) + " characters."
+MESSAGE_COMMENT_INVALID_LENGTH = "Your comment's length has to be shorter than " + str(MAX_COMMENT_SIZE) + " characters."
 MESSAGE_MASTER_PASSWORD_INVALID_LENGTH = "Your master password's length has to be longer or equal to " + str(MIN_MASTER_PASSWORD_SIZE) + " characters."
 MESSAGE_CONFIRMATION_PASS_DIFFERENT_PASS = "Your confirmation password is different from your password."
 MESSAGE_MAIL_TAKEN = "That email is already registered."
@@ -78,3 +81,10 @@ BASIC_RED_BTN_STYLE_SHEET = """
                             } QPushButton:hover {background-color: """ + DARK_RED_COLOR + """
                             } QPushButton:pressed {background-color: """ + DARK_RED_PLUS_COLOR + """}
                             """
+
+BASIC_BLUE_LINE_EDIT_STYLE_SHEET = """
+                                    QLineEdit {background-color: """ + DARK_GRAY_COLOR + """; color: """ + BASIC_STR_COLOR + """
+                                    ;border: 2px solid """ + GRAY_COLOR + """; border-radius: 5px; font-size: 14pt}
+                                    QLineEdit:hover {border: 1px solid """ + BLACK_COLOR + """
+                                    ;}QLineEdit:focus {border: 2px solid """ + BLUE_COLOR + """;}
+                                    """

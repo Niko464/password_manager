@@ -18,7 +18,7 @@ def main():
     
     """
     
-    main = main_wrapper_class.main_wrapper({"user_id": 3, "master_password": "cacacaca"})
+    main = main_wrapper_class.main_wrapper({"hashed_master_password": "$2b$12$4BjM1gQ3BeXIK/RfRceTy.opbE42Zq/I/FDconsWUX.hfDofkI8Z2", "master_password": "=iaLEu9\\"})
     main.show()
     """
     sys.exit(app.exec_())

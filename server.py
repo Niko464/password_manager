@@ -2,12 +2,10 @@ import socket
 import mysql.connector as mysql
 import src.config as config
 import src.utils_encryption as utils_encryption
-import time
 import bcrypt
 #import pickle
 import select
 import json
-import time
 from datetime import datetime
 
 old_print = print
@@ -76,12 +74,12 @@ def main():
                         response = check_if_name_exists(message['hashed_master_password'], message['name'])
                         send_message(notified_socket, response)
                     elif (message['code'] == 5):
-                        print(PREFIX + "Calling save_new_password with params: " + message['hashed_master_password'], message['name'], message['encrypted_password'])
-                        response = save_new_password(message['hashed_master_password'], message['name'], message['encrypted_password'])
+                        print(PREFIX + "Calling save_new_password with params: " + message['hashed_master_password'], message['name'], message['encrypted_password'], " username, mail, pin_code, comment")
+                        response = save_new_password(message['hashed_master_password'], message['name'], message['encrypted_password'], message['encrypted_username'], message['encrypted_mail'], message['encrypted_pin_code'], message['comment'])
                         send_message(notified_socket, response)
                     elif (message['code'] == 6):
-                        print(PREFIX + "Calling update_existing_password with params: " + message['hashed_master_password'], message['old_name'], message['new_name'], message['new_encrypted_password'])
-                        response = update_existing_password(message['hashed_master_password'], message['old_name'], message['new_name'], message['new_encrypted_password'])
+                        print(PREFIX + "Calling update_existing_password with params: " + message['hashed_master_password'], message['old_name'], message['new_name'], message['new_encrypted_password'], " username, mail, pin_code, comment")
+                        response = update_existing_password(message['hashed_master_password'], message['old_name'], message['new_name'], message['new_encrypted_password'], message['new_encrypted_username'], message['new_encrypted_mail'], message['new_encrypted_pin_code'], message['new_comment'])
                         send_message(notified_socket, response)
                     elif (message['code'] == 7):
                         print(PREFIX + "Calling remove_password with params: " + message['hashed_master_password'], message['name'])
@@ -119,8 +117,7 @@ def receive_message(socket_to_send_to):
                 if not packet:
                     break
                 data.append(packet)
-                msg_len -= 256
-                time.sleep(0.001)
+                msg_len -= len(packet)
             to_return = json.loads(b"".join(data))
         else:
             to_return = json.loads(socket_to_send_to.recv(msg_len).decode('utf-8'))
@@ -130,7 +127,7 @@ def receive_message(socket_to_send_to):
         return False
 
 
-def save_new_password(hashed_master_password, name, password):
+def save_new_password(hashed_master_password, name, password, username, mail, pin_code, comment):
     try:
         connection = mysql.connect(
                 host = MYSQL_HOST,
@@ -146,9 +143,8 @@ def save_new_password(hashed_master_password, name, password):
         crsr.execute(sql_query, sql_args)
 
         user_id = crsr.fetchone()[0]
-
-        sql_query = """INSERT INTO passwords (owner_id, name, password) VALUES (%s,%s,%s);"""
-        sql_args = (user_id, name, bytes(password, 'utf-8'))
+        sql_query = """INSERT INTO passwords (owner_id, name, password, username, mail, pin_code, comment) VALUES (%s,%s,%s,%s, %s, %s, %s);"""
+        sql_args = (user_id, name, bytes(password, 'utf-8'), bytes(username, 'utf-8'), bytes(mail, 'utf-8'), bytes(pin_code, 'utf-8'), comment)
         crsr.execute(sql_query, sql_args)
         connection.commit()
 
@@ -176,14 +172,21 @@ def get_user_passwords_info(hashed_master_password):
 
         user_id = crsr.fetchone()[0]
 
-        sql_query = """SELECT Id, owner_id, name, TRIM(TRAILING CHAR(0) FROM password) as password FROM passwords WHERE owner_id = %s;"""
+        sql_query = """SELECT Id, owner_id, name, TRIM(TRAILING CHAR(0) FROM password) as password, TRIM(TRAILING CHAR(0) FROM username) as username, TRIM(TRAILING CHAR(0) FROM mail) as mail, TRIM(TRAILING CHAR(0) FROM pin_code) as pin_code, comment FROM passwords WHERE owner_id = %s;"""
         sql_args = (user_id, )
         crsr.execute(sql_query, sql_args)
         
         data = crsr.fetchall()
 
         for row in data:
-            to_return['results'].append({"name": row[2], "encrypted_password": row[3]})
+            to_append = {"name": row[2], "encrypted_password": row[3], "encrypted_username": "", "encrypted_mail": "", "encrypted_pin_code": "", "comment": row[7]}
+            if (row[4] != None):
+                to_append['encrypted_username'] = row[4]
+            if (row[5] != None):
+                to_append['encrypted_mail'] = row[5]
+            if (row[6] != None):
+                to_append['encrypted_pin_code'] = row[6]
+            to_return['results'].append(to_append)
 
         crsr.close()
         connection.close()
@@ -229,7 +232,7 @@ def check_if_name_exists(hashed_master_password, name):
         print("Exception: " + str(e))
     return {'code': -1, 'message': config.MESSAGE_ERROR_SERVER_SIDE}
 
-def update_existing_password(hashed_master_password, old_name, new_name, new_encrypted_password):
+def update_existing_password(hashed_master_password, old_name, new_name, new_encrypted_password, new_encrypted_username, new_encrypted_mail, new_encrypted_pin_code, new_comment):
     try:
         connection = mysql.connect(
                 host = MYSQL_HOST,
@@ -245,8 +248,8 @@ def update_existing_password(hashed_master_password, old_name, new_name, new_enc
 
         user_id = crsr.fetchone()[0]
 
-        sql_query = """UPDATE passwords SET name = %s, password = %s WHERE name = %s AND owner_id = %s;"""
-        sql_args = (new_name, bytes(new_encrypted_password, 'utf-8'), old_name, user_id)
+        sql_query = """UPDATE passwords SET name = %s, password = %s, username = %s, mail = %s, pin_code = %s, comment = %s WHERE name = %s AND owner_id = %s;"""
+        sql_args = (new_name, bytes(new_encrypted_password, 'utf-8'), bytes(new_encrypted_username, 'utf-8'), bytes(new_encrypted_mail, 'utf-8'), bytes(new_encrypted_pin_code, 'utf-8'), new_comment, old_name, user_id)
         crsr.execute(sql_query, sql_args)
         connection.commit()
         

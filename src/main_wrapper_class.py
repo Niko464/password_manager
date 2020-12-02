@@ -18,8 +18,8 @@ class main_wrapper(QMainWindow):
         super().__init__()
         self.central_widget = QWidget()
         self.main_layout = QVBoxLayout()
-        self.width = 400
-        self.height = 500
+        self.width = 600
+        self.height = 700
         self.user_info = user_info
         self.password_list = utils_server.get_user_passwords_info(user_info["hashed_master_password"], user_info["master_password"])
         self.create_ui()
@@ -47,7 +47,7 @@ class main_wrapper(QMainWindow):
         self.search_bar = utils.create_custom_line_edit(default_text="", placeholder_text="Search here...", regex=None, max_len=config.MAX_NAME_SIZE)
         self.search_bar.setStyleSheet('QLineEdit {background-color: ' + config.DARK_GRAY_COLOR + '; color: ' + config.BASIC_STR_COLOR + ';'
                                 'border-radius: 10px; font-size: 14pt}')
-        self.search_bar.setFixedSize(250, 27)
+        self.search_bar.setFixedSize(self.width - 300, 27)
         self.search_bar.returnPressed.connect(self.search_btn_clicked)
 
         self.search_btn = QPushButton("Search")
@@ -74,12 +74,12 @@ class main_wrapper(QMainWindow):
                                     'QScrollBar { height:0px; }')
         scroll_area.setFrameShape(QFrame.NoFrame)
         
-        scroll_area.setFixedSize(320, 350)
+        scroll_area.setFixedSize(self.width - 80, self.height - 100)
         
         
         for obj in self.password_list:
         #obj = self.password_list[0]
-            self.add_to_gui_list(obj["name"], obj["password"])
+            self.add_to_gui_list(obj["name"], obj["password"], obj["username"], obj["mail"], obj["pin_code"], obj["comment"])
         self.gui_layout.addStretch(1)
 
         self.container.setLayout(self.gui_layout)
@@ -95,10 +95,10 @@ class main_wrapper(QMainWindow):
     def get_lower_widget(self):
         to_return = QWidget()
         to_return.setStyleSheet('QWidget {background-color: ' + config.GRAY_COLOR + ';}')
-        to_return.setFixedSize(400, 75)
+        to_return.setFixedSize(self.width, 75)
 
         add_btn = QPushButton("Add")
-        add_btn.setFixedSize(self.width - 50, 50)
+        add_btn.setFixedSize(self.width - 200, 50)
         add_btn.setStyleSheet(config.BASIC_BLUE_BTN_STYLE_SHEET)
         add_btn.clicked.connect(self.add_btn_clicked)
 
@@ -108,9 +108,9 @@ class main_wrapper(QMainWindow):
         to_return.setLayout(layout)
         return to_return
 
-    def add_to_gui_list(self, name, password):
+    def add_to_gui_list(self, name, password, username, mail, pin_code, comment):
         # maybe remember something here in order to be able to delete it later on
-        to_add = list_object_class.list_object(name, password, self)
+        to_add = list_object_class.list_object(name, password, username, mail, pin_code, comment, self)
         """
         to_add = QHBoxLayout()
         to_add.addWidget(QLabel("TEST"))
@@ -123,10 +123,14 @@ class main_wrapper(QMainWindow):
         dialog = add_edit_dialog_class.add_edit_dialog(self, enums.ADD_DIALOG_ENUM)
         if (dialog.exec()):
             new_password_info = dialog.get_new_password_info()
-            encrypted_password = utils_encryption.encode_password(utils_encryption.get_key_from_master_password(self.user_info["master_password"]), new_password_info["password"])
-            server_result = utils_server.save_new_password(self.user_info["hashed_master_password"], new_password_info["name"], encrypted_password)
+            encryption_key = utils_encryption.get_key_from_master_password(self.user_info["master_password"])
+            encrypted_password = utils_encryption.encode_password(encryption_key, new_password_info["password"])
+            encrypted_username = utils_encryption.encode_password(encryption_key, new_password_info["username"]) if new_password_info['username'] != "" else bytes("", 'utf-8')
+            encrypted_mail = utils_encryption.encode_password(encryption_key, new_password_info["mail"]) if new_password_info['mail'] != "" else bytes("", 'utf-8')
+            encrypted_pin_code = utils_encryption.encode_password(encryption_key, new_password_info["pin_code"]) if new_password_info['pin_code'] != "" else bytes("", 'utf-8')
+            server_result = utils_server.save_new_password(self.user_info["hashed_master_password"], new_password_info["name"], encrypted_password, encrypted_username, encrypted_mail, encrypted_pin_code, new_password_info['comment'])
             if server_result['code'] == 0:
-                self.add_to_gui_list(new_password_info["name"], new_password_info["password"])
+                self.add_to_gui_list(new_password_info["name"], new_password_info["password"], new_password_info["username"], new_password_info["mail"], new_password_info["pin_code"], new_password_info["comment"])
                 self.password_list.append(new_password_info)
             else:
                 utils.show_error(server_result['message'])
