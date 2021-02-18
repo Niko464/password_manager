@@ -6,7 +6,7 @@ import socket
 #import pickle
 import json
 
-SERVER_IP = "45.140.164.47" #"45.140.164.47"
+SERVER_IP = "152.228.129.76" #"45.140.164.47"
 SERVER_PORT = 1234
 
 def save_new_password(hashed_master_password, name, encrypted_password, encrypted_username, encrypted_mail, encrypted_pin_code, comment):

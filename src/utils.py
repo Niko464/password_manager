@@ -19,10 +19,12 @@ def create_custom_line_edit(default_text = None, placeholder_text = None, regex 
 
 def move_window_to_middle_of_screen(win_width, win_height, win):
     win.setFixedSize(win_width, win_height)
-    screenGeometry = QApplication.desktop().geometry()
-    x = (screenGeometry.width() - win_width) / 2
-    y = (screenGeometry.height() - win_height) / 2
-    win.move(x, y)
+    #win.setGeometry(QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, win.size(), QApplication.desktop().availableGeometry()))
+    frame_geom = win.frameGeometry()
+    screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+    centerPoint = QApplication.desktop().screenGeometry(screen).center()
+    frame_geom.moveCenter(centerPoint)
+    win.move(frame_geom.topLeft())
 
 def create_random_password(length):
     password = ""

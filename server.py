@@ -19,7 +19,7 @@ MYSQL_USER = "nikolaj"
 MYSQL_PASS = "fopHJ97kL0m6d@aKDL4r"
 MYSQL_DATABASE = "password_manager"
 
-SERVER_IP = "45.140.164.47" #"45.140.164.47"
+SERVER_IP = "152.228.129.76" #"45.140.164.47"
 SERVER_PORT = 1234
 
 PREFIX = ">> "
@@ -179,13 +179,13 @@ def get_user_passwords_info(hashed_master_password):
         data = crsr.fetchall()
 
         for row in data:
-            to_append = {"name": row[2], "encrypted_password": row[3], "encrypted_username": "", "encrypted_mail": "", "encrypted_pin_code": "", "comment": row[7]}
+            to_append = {"name": row[2], "encrypted_password": row[3].decode(), "encrypted_username": "", "encrypted_mail": "", "encrypted_pin_code": "", "comment": row[7]}
             if (row[4] != None):
-                to_append['encrypted_username'] = row[4]
+                to_append['encrypted_username'] = row[4].decode()
             if (row[5] != None):
-                to_append['encrypted_mail'] = row[5]
+                to_append['encrypted_mail'] = row[5].decode()
             if (row[6] != None):
-                to_append['encrypted_pin_code'] = row[6]
+                to_append['encrypted_pin_code'] = row[6].decode()
             to_return['results'].append(to_append)
 
         crsr.close()
@@ -302,10 +302,10 @@ def try_logging_in(username_str, password_str):
         sql_args = (username_str, )
         crsr.execute(sql_query, sql_args)
         for row in crsr.fetchall():
-            if bcrypt.checkpw(bytes(password_str, 'utf-8'), bytes(row[3], encoding='utf-8')):
+            if bcrypt.checkpw(bytes(password_str, 'utf-8'), bytes(row[3].decode(), 'utf-8')):
                 crsr.close()
                 connection.close()
-                return {'code': 0, 'message': 'Logged In', 'hashed_master_password': row[3]}
+                return {'code': 0, 'message': 'Logged In', 'hashed_master_password': row[3].decode()}
     except Exception as e:
         print("Exception: " + str(e))
         return {'code': -1, 'message': config.MESSAGE_ERROR_SERVER_SIDE}
@@ -359,7 +359,7 @@ def try_signing_up(username_str, mail_str, hashed_pass):
         sql_args = (username_str, )
         crsr.execute(sql_query, sql_args)
 
-        hashed_master_password = crsr.fetchone()[3]
+        hashed_master_password = crsr.fetchone()[3].decode()
 
         crsr.close()
         connection.close()

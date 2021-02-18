@@ -68,7 +68,7 @@ class add_edit_dialog(QDialog):
         """
         self.pin_code_field = PasswordEdit()
         self.pin_code_field.setMaxLength(config.MAX_PIN_CODE_SIZE)
-        self.pin_code_field.setPlaceholderText("Required")
+        self.pin_code_field.setPlaceholderText("Optional")
         self.pin_code_field.setFixedHeight(35)
         self.pin_code_field.setStyleSheet(config.BASIC_BLUE_LINE_EDIT_STYLE_SHEET)
 
