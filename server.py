@@ -7,6 +7,10 @@ import bcrypt
 import select
 import json
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 old_print = print
 def timestamped_print(*args, **kwargs):
@@ -14,13 +18,13 @@ def timestamped_print(*args, **kwargs):
 print = timestamped_print
 
 
-MYSQL_HOST = "127.0.0.1"
-MYSQL_USER = "nikolaj"
-MYSQL_PASS = "fopHJ97kL0m6d@aKDL4r"
-MYSQL_DATABASE = "password_manager"
+MYSQL_HOST = os.getenv('MYSQL_HOST')
+MYSQL_USER = os.getenv('MYSQL_USER')
+MYSQL_PASS = os.getenv('MYSQL_PASS')
+MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
 
-SERVER_IP = "152.228.129.76" #"45.140.164.47"
-SERVER_PORT = 1234
+SERVER_IP = "localhost"
+SERVER_PORT = int(os.getenv('SERVER_PORT'))
 
 PREFIX = ">> "
 
